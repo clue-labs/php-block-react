@@ -42,21 +42,26 @@ function await(PromiseInterface $promise, LoopInterface $loop)
     $resolved = null;
     $exception = null;
 
-    $promise->then(
-        function ($c) use (&$resolved, &$wait, $loop) {
+    $promise = $promise->then(
+        function ($c) use (&$resolved, &$wait) {
             $resolved = $c;
             $wait = false;
-            $loop->stop();
         },
-        function ($error) use (&$exception, &$wait, $loop) {
+        function ($error) use (&$exception, &$wait) {
             $exception = $error;
             $wait = false;
-            $loop->stop();
         }
     );
 
-    while ($wait) {
-        $loop->run();
+    if ($wait) {
+        $promise->then(function () use (&$wait, $loop) {
+            $wait = false;
+            $loop->stop();
+        });
+
+        while ($wait) {
+            $loop->run();
+        }
     }
 
     if ($exception !== null) {
