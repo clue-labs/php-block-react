@@ -26,14 +26,19 @@ function sleep($time, LoopInterface $loop)
  *
  * @param PromiseInterface $promise
  * @param LoopInterface    $loop
+ * @param null|float       $timeout (optional) timeout in seconds
  * @return mixed returns whatever the promise resolves to
  * @throws Exception when the promise is rejected
  */
-function await(PromiseInterface $promise, LoopInterface $loop)
+function await(PromiseInterface $promise, LoopInterface $loop, $timeout = null)
 {
     $wait = true;
     $resolved = null;
     $exception = null;
+
+    if ($timeout !== null) {
+        $promise = Timer\timeout($promise, $timeout, $loop);
+    }
 
     $promise->then(
         function ($c) use (&$resolved, &$wait, $loop) {
